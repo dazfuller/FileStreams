@@ -1,7 +1,9 @@
-﻿using System.Data.Entity;
-using System.Data.Entity.Core.Objects;
+﻿using System;
+using System.Data.Entity;
+using System.Data.Entity.Core.Metadata.Edm;
+using System.Data.Entity.Core.Mapping;
 using System.Data.Entity.Infrastructure;
-using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace FileStreams.Data
 {
@@ -9,18 +11,12 @@ namespace FileStreams.Data
     {
         public static string GetTableName<T>(this DbContext context) where T : class
         {
-            var objectContext = ((IObjectContextAdapter)context).ObjectContext;
-            return objectContext.GetTableName<T>();
-        }
+            var workspace = ((IObjectContextAdapter)context).ObjectContext.MetadataWorkspace;
+            var mappingItemCollection = (StorageMappingItemCollection)workspace.GetItemCollection(DataSpace.CSSpace);
+            var storeContainer = ((EntityContainerMapping)mappingItemCollection[0]).StoreEntityContainer;
+            var baseEntitySet = storeContainer.BaseEntitySets.Single(es => es.Name == typeof(T).Name);
 
-        public static string GetTableName<T>(this ObjectContext context) where T : class
-        {
-            var sql = context.CreateObjectSet<T>().ToTraceString();
-            var regex = new Regex("FROM (?<table>.*) AS");
-            var match = regex.Match(sql);
-            var table = match.Groups["table"].Value;
-
-            return table;
+            return String.Format("{0}.{1}", baseEntitySet.Schema, baseEntitySet.Table);
         }
     }
 }

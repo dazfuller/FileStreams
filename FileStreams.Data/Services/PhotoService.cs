@@ -104,7 +104,7 @@ namespace FileStreams.Data.Services
             }
         }
 
-        private void SavePhotoData(FileStreamContext context, Photo entity)
+        private static void SavePhotoData(FileStreamContext context, Photo entity)
         {
             var selectStatement = String.Format(RowDataStatement, context.GetTableName<Photo>());
 
